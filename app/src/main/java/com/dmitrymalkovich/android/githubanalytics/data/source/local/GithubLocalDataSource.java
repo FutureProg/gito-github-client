@@ -43,6 +43,7 @@ public class GithubLocalDataSource implements GithubDataSource {
     public static String LOG_TAG = GithubLocalDataSource.class.getSimpleName();
     private static final String PREFERENCES_TOKEN = "PREFERENCES_TOKEN";
     private static final String PREFERENCES_TOKEN_TYPE = "PREFERENCES_TOKEN_TYPE";
+    private static final String PREFERENCES_NOTIFICATIONS = "PREFERENCES_NOTIFICATIONS";
 
     private static final String PREFERENCES_TRENDING_PERIOD = "PREFERENCES_TRENDING_PERIOD";
     private static final String PREFERENCES_TRENDING_LANGUAGE = "PREFERENCES_TRENDING_LANGUAGE";
@@ -159,6 +160,18 @@ public class GithubLocalDataSource implements GithubDataSource {
         SharedPreferences.Editor editor = mPreferences.edit();
         editor.putString(PREFERENCES_TOKEN, token);
         editor.putString(PREFERENCES_TOKEN_TYPE, tokenType);
+        editor.apply();
+    }
+
+    @Override
+    public boolean notificationEnabled() {
+        return mPreferences.getBoolean(PREFERENCES_NOTIFICATIONS, true);
+    }
+
+    @Override
+    public void toggleNotifications() {
+        SharedPreferences.Editor editor = mPreferences.edit();
+        editor.putBoolean(PREFERENCES_NOTIFICATIONS, !notificationEnabled());
         editor.apply();
     }
 

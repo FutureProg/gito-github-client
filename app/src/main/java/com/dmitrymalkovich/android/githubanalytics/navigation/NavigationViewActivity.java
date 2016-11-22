@@ -1,7 +1,12 @@
 package com.dmitrymalkovich.android.githubanalytics.navigation;
 
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -14,6 +19,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -28,6 +34,7 @@ import com.dmitrymalkovich.android.githubanalytics.data.source.GithubRepository;
 import com.dmitrymalkovich.android.githubanalytics.data.source.local.LoaderProvider;
 import com.dmitrymalkovich.android.githubanalytics.data.source.local.contract.UserContract;
 import com.dmitrymalkovich.android.githubanalytics.data.sync.SyncAdapter;
+import com.dmitrymalkovich.android.githubanalytics.notifications.NotificationsService;
 import com.dmitrymalkovich.android.githubanalytics.repositories.PublicRepositoryFragment;
 import com.dmitrymalkovich.android.githubanalytics.repositories.PublicRepositoryPresenter;
 import com.dmitrymalkovich.android.githubanalytics.trending.TrendingRepositoryFragment;
@@ -63,6 +70,33 @@ public class NavigationViewActivity extends AppCompatActivity
 
         mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
         mNavigationView.setNavigationItemSelectedListener(this);
+
+        GithubRepository repository = GithubRepository.Injection.provideGithubRepository(this);
+        mNavigationView.getMenu().findItem(R.id.nav_notifications)
+                .setIcon(repository.notificationEnabled() ?
+                        R.drawable.ic_notifications_active_black_24dp :
+                        R.drawable.ic_notifications_off_black_24dp);
+
+        if (Build.VERSION.SDK_INT >= 21) {
+            mNavigationView.getMenu().findItem(R.id.nav_notifications)
+                    .setVisible(Build.VERSION.SDK_INT >= 21);
+
+            JobScheduler scheduler = (JobScheduler)
+                    getSystemService(Context.JOB_SCHEDULER_SERVICE);
+
+            JobInfo.Builder builder = new JobInfo.Builder(1,
+                    new ComponentName(this,
+                            NotificationsService.class));
+            builder.setPeriodic(1000 * 60);
+//            builder.setPersisted(true);
+//            builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
+            // builder.setRequiresDeviceIdle(true);
+            scheduler.cancelAll();
+            int result = scheduler.schedule(builder.build());
+            if (result == JobScheduler.RESULT_SUCCESS)
+                Log.d(LOG_TAG, "Job scheduled successfully!");
+        }
+
 
         if (savedInstanceState == null) {
             showDashboard();
@@ -111,7 +145,7 @@ public class NavigationViewActivity extends AppCompatActivity
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+    public boolean onNavigationItemSelected(@NonNull final MenuItem item) {
         final int id = item.getItemId();
         new Handler().postDelayed(new Runnable() {
             @Override
@@ -126,11 +160,24 @@ public class NavigationViewActivity extends AppCompatActivity
                     ActivityUtils.openFeedback(NavigationViewActivity.this);
                 } else if (id == R.id.nav_sign_out) {
                     signOut();
+                } else if (id == R.id.nav_notifications) {
+                    GithubRepository repository = GithubRepository.Injection
+                            .provideGithubRepository(NavigationViewActivity.this);
+                    if (repository.notificationEnabled()) {
+                        item.setIcon(R.drawable.ic_notifications_off_black_24dp);
+                    } else {
+                        item.setIcon(R.drawable.ic_notifications_active_black_24dp);
+                    }
+                    repository.toggleNotifications();
                 }
+
             }
         }, NAV_VIEW_LAUNCH_DELAY);
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
+
+        if (id != R.id.nav_notifications) {
+            DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+            drawer.closeDrawer(GravityCompat.START);
+        }
         return true;
     }
 

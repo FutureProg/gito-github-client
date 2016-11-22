@@ -681,4 +681,14 @@ public class GithubRemoteDataSource implements GithubDataSource {
             return null;
         }
     }
+
+    @Override
+    public boolean notificationEnabled() {
+        return GithubLocalDataSource.getInstance(mContentResolver, mPreferences).notificationEnabled();
+    }
+
+    @Override
+    public void toggleNotifications() {
+        GithubLocalDataSource.getInstance(mContentResolver, mPreferences).toggleNotifications();
+    }
 }

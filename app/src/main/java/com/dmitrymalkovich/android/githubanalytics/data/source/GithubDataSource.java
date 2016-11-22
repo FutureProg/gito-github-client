@@ -108,4 +108,8 @@ public interface GithubDataSource {
     void setDefaultPeriodForTrending(@GithubLocalDataSource.TrendingPeriod String period);
 
     void getStargazers(Repository repository, GetStargazersCallback callback);
+
+    boolean notificationEnabled();
+
+    void toggleNotifications();
 }

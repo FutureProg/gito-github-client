@@ -291,6 +291,16 @@ public class GithubRepository implements GithubDataSource {
     }
 
     @Override
+    public boolean notificationEnabled() {
+        return mGithubLocalDataSource.notificationEnabled();
+    }
+
+    @Override
+    public void toggleNotifications() {
+        mGithubLocalDataSource.toggleNotifications();
+    }
+
+    @Override
     public String getToken() {
         String token = mGithubLocalDataSource.getToken();
         return token != null && !token.isEmpty() ? token : null;

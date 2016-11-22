@@ -2,6 +2,9 @@ package com.dmitrymalkovich.android.githubanalytics.data.sync;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
@@ -15,10 +18,13 @@ import android.os.Bundle;
 import com.dmitrymalkovich.android.githubanalytics.R;
 import com.dmitrymalkovich.android.githubanalytics.data.source.GithubRepository;
 import com.dmitrymalkovich.android.githubanalytics.data.source.remote.GithubRemoteDataSource;
+import com.dmitrymalkovich.android.githubanalytics.notifications.NotificationsManager;
 
 import org.eclipse.egit.github.core.Repository;
 
 import java.util.List;
+
+import static android.content.Context.NOTIFICATION_SERVICE;
 
 /**
  * Handle the transfer of data between a server and an
@@ -68,6 +74,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         final GithubRemoteDataSource githubRepository =
                 GithubRepository.Injection.provideRemoteDataSource(getContext());
         githubRepository.getUserSync();
+
         if (mSyncSettings.isSynced(key)) {
             return;
         } else {
